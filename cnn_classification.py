@@ -217,3 +217,35 @@ Rôle des pertes (losses):
    - Objectif: minimiser content_loss + α * style_loss
    - α contrôle le compromis entre contenu et style
 """)
+
+
+## Visualisation de résultats 
+
+def plot_training_history(history):
+    """Affiche les courbes d'apprentissage."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Précision
+    ax1.plot(history.history['accuracy'], label='Train')
+    ax1.plot(history.history['val_accuracy'], label='Validation')
+    ax1.set_title('Précision du modèle')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Précision')
+    ax1.legend()
+    ax1.grid(True)
+    
+    # Perte
+    ax2.plot(history.history['loss'], label='Train')
+    ax2.plot(history.history['val_loss'], label='Validation')
+    ax2.set_title('Perte du modèle')
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Perte')
+    ax2.legend()
+    ax2.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig('training_history.png', dpi=300, bbox_inches='tight')
+    print("\nGraphiques sauvegardés dans 'training_history.png'")
+    
+plot_training_history(history)
+
