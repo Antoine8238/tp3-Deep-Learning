@@ -32,3 +32,72 @@ print(f"Exemple de label One-Hot: {y_train[0]}")
 # Noms des classes CIFAR-10
 class_names = ['avion', 'automobile', 'oiseau', 'chat', 'cerf', 
                'chien', 'grenouille', 'cheval', 'bateau', 'camion']
+
+##
+
+
+def build_basic_cnn(input_shape, num_classes):
+    """
+    Construit un CNN basique pour la classification d'images.
+    
+    Architecture:
+    - Conv2D (32 filtres) + MaxPooling
+    - Conv2D (64 filtres) + MaxPooling
+    - Flatten
+    - Dense (512 unités)
+    - Dense (num_classes unités, sortie)
+    """
+    model = keras.Sequential([
+        # Couche convolutive 1: 32 filtres, taille 3x3, activation ReLU
+        keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same',
+                           input_shape=input_shape),
+        # Couche de pooling 1: Max Pooling 2x2
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        
+        # Couche convolutive 2: 64 filtres, taille 3x3, activation ReLU
+        keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+        # Couche de pooling 2: Max Pooling 2x2
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        
+        # Couche Flatten pour passer aux couches denses
+        keras.layers.Flatten(),
+        
+        # Couche Dense 1: 512 unités, activation ReLU
+        keras.layers.Dense(512, activation='relu'),
+        # Couche de sortie: num_classes unités, activation Softmax
+        keras.layers.Dense(num_classes, activation='softmax')
+    ])
+    return model
+
+# Construire le modèle
+model = build_basic_cnn(INPUT_SHAPE, NUM_CLASSES)
+
+# Compiler le modèle
+model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Afficher l'architecture du modèle
+print("\nArchitecture du CNN basique:")
+model.summary()
+
+# Entraîner le modèle
+print("\nEntraînement du modèle...")
+history = model.fit(
+    x_train, y_train,
+    batch_size=64,
+    epochs=10,
+    validation_split=0.1,  # 10% des données d'entraînement pour la validation
+    verbose=1
+)
+
+# Évaluer le modèle sur les données de test
+print("\n" + "="*70)
+print("ÉVALUATION DU MODÈLE")
+print("="*70)
+
+test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+print(f"\nPerte sur le test: {test_loss:.4f}")
+print(f"Précision sur le test: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
