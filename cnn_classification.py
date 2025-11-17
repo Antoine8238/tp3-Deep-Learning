@@ -33,7 +33,7 @@ print(f"Exemple de label One-Hot: {y_train[0]}")
 class_names = ['avion', 'automobile', 'oiseau', 'chat', 'cerf', 
                'chien', 'grenouille', 'cheval', 'bateau', 'camion']
 
-##
+## Implémentation d'un cnn basique
 
 
 def build_basic_cnn(input_shape, num_classes):
@@ -101,3 +101,68 @@ print("="*70)
 test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
 print(f"\nPerte sur le test: {test_loss:.4f}")
 print(f"Précision sur le test: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
+
+# Implémentation d'un bloc résiduel
+
+
+def residual_block(x, filters, kernel_size=(3, 3), stride=1):
+    """
+    Crée un bloc résiduel avec skip connection.
+    
+    Avantage: La skip connection permet au gradient de se propager 
+    directement à travers le réseau, évitant le problème de vanishing gradient
+    dans les réseaux très profonds.
+    """
+    # Chemin principal
+    y = keras.layers.Conv2D(filters, kernel_size, strides=stride,
+                           padding='same', activation='relu')(x)
+    y = keras.layers.Conv2D(filters, kernel_size, padding='same')(y)
+    
+    # Chemin de skip connection
+    if stride > 1 or x.shape[-1] != filters:
+        # La skip connection doit adapter les dimensions si nécessaire
+        x = keras.layers.Conv2D(filters, (1, 1), strides=stride)(x)
+    
+    # Addition du chemin skip avec le chemin principal
+    z = keras.layers.Add()([x, y])
+    z = keras.layers.Activation('relu')(z)
+    
+    return z
+
+# Construire une petite architecture utilisant 3 blocs résiduels consécutifs
+print("\nConstruction d'un modèle avec blocs résiduels...")
+
+input_layer = keras.Input(shape=INPUT_SHAPE)
+x = residual_block(input_layer, 32)
+x = residual_block(x, 64, stride=2)
+x = residual_block(x, 64)
+
+# Ajouter les couches de classification
+x = keras.layers.GlobalAveragePooling2D()(x)
+x = keras.layers.Dense(128, activation='relu')(x)
+output = keras.layers.Dense(NUM_CLASSES, activation='softmax')(x)
+
+# Créer le modèle
+resnet_model = keras.Model(inputs=input_layer, outputs=output)
+
+# Compiler le modèle
+resnet_model.compile(
+    optimizer='adam',
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+print("\nArchitecture du ResNet simplifié:")
+resnet_model.summary()
+
+print("\n" + "="*70)
+print("EXPLICATION DES BLOCS RÉSIDUELS")
+print("="*70)
+print("""
+Avantage de la skip connection (addition de x à la sortie):
+- Permet au gradient de se propager directement à travers le réseau
+- Évite le problème de vanishing gradient dans les réseaux profonds
+- Permet d'entraîner des réseaux beaucoup plus profonds (100+ couches)
+- Le réseau peut apprendre l'identité plus facilement (si nécessaire)
+- Améliore la convergence et les performances finales
+""")
