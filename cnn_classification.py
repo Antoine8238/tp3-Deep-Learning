@@ -249,3 +249,45 @@ def plot_training_history(history):
     
 plot_training_history(history)
 
+## Prédiction et visualisation
+
+
+def visualize_predictions(model, x_test, y_test, class_names, num_images=10):
+    
+    
+    # Prédictions
+    predictions = model.predict(x_test[:num_images])
+    
+    # Créer la figure
+    fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+    axes = axes.ravel()
+    
+    for i in range(num_images):
+        # Afficher l'image
+        axes[i].imshow(x_test[i])
+        
+        # Trouver les indices
+        pred_idx = np.argmax(predictions[i])
+        true_idx = np.argmax(y_test[i])
+        
+        # Noms des classes
+        pred_label = class_names[pred_idx]
+        true_label = class_names[true_idx]
+        
+        # Vérifier si correct
+        if pred_idx == true_idx:
+            color = 'green'
+        else:
+            color = 'red'
+        
+        # Titre
+        axes[i].set_title(f'Pred: {pred_label}\nTrue: {true_label}', color=color)
+        axes[i].axis('off')
+    
+    plt.tight_layout()
+    plt.savefig('predictions.png')
+    plt.show()
+    print("Image sauvegardée!")
+
+# Appel
+visualize_predictions(model, x_test, y_test, class_names)
