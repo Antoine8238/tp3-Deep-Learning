@@ -166,3 +166,54 @@ Avantage de la skip connection (addition de x à la sortie):
 - Le réseau peut apprendre l'identité plus facilement (si nécessaire)
 - Améliore la convergence et les performances finales
 """)
+
+
+## Neural Style Transfer
+
+# Charger le modèle VGG16 pré-entraîné
+print("\nChargement du modèle VGG16 pré-entraîné...")
+vgg = keras.applications.VGG16(include_top=False, weights='imagenet')
+vgg.trainable = False  # Important: le modèle VGG n'est pas entraîné ici
+
+# Couches de contenu et de style pour l'extraction de features
+content_layers = ['block5_conv2']
+style_layers = ['block1_conv1', 'block2_conv1', 'block3_conv1', 
+                'block4_conv1', 'block5_conv1']
+
+def create_extractor(model, style_layers, content_layers):
+    """
+    Crée un modèle extracteur qui sort les activations des couches sélectionnées.
+    """
+    outputs = [model.get_layer(name).output 
+               for name in style_layers + content_layers]
+    return keras.Model(inputs=model.input, outputs=outputs)
+
+extractor = create_extractor(vgg, style_layers, content_layers)
+
+print("\nExtracteur créé avec succès!")
+print(f"Couches de style: {style_layers}")
+print(f"Couches de contenu: {content_layers}")
+
+print("\n" + "="*70)
+print("EXPLICATION DU TRANSFERT DE STYLE")
+print("="*70)
+print("""
+Rôle des pertes (losses):
+
+1. CONTENT LOSS (Perte de contenu):
+   - Mesure la différence entre les features de contenu de l'image générée
+     et celles de l'image de contenu originale
+   - Assure que la structure/composition de l'image est préservée
+   - Utilise les couches profondes du réseau (features de haut niveau)
+
+2. STYLE LOSS (Perte de style):
+   - Mesure la différence entre les statistiques de style (matrice de Gram)
+     de l'image générée et celles de l'image de style
+   - Capture les textures, couleurs, et motifs de l'image de style
+   - Utilise plusieurs couches (features à différentes échelles)
+
+3. OPTIMISATION:
+   - On optimise les PIXELS de l'image générée (pas les poids du réseau!)
+   - Objectif: minimiser content_loss + α * style_loss
+   - α contrôle le compromis entre contenu et style
+""")
